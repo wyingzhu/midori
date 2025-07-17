@@ -34,51 +34,56 @@ struct EditCardView: View {
     }
 
     var body: some View {
-        Form {
-            Section(header: Text("Card Info")) {
-                TextField("Institution", text: $card.institution)
-                Picker("Account Type", selection: $card.accountType) {
-                    ForEach(AccountType.allCases) { type in
-                        Text(type.displayName).tag(type)
+        VStack {
+            Form {
+                Section(header: Text("Card Info")) {
+                    TextField("Institution", text: $card.institution)
+                    Picker("Account Type", selection: $card.accountType) {
+                        ForEach(AccountType.allCases) { type in
+                            Text(type.displayName).tag(type)
+                        }
                     }
+                    TextField("Last 4 Digits", text: $card.last4Digits)
+                        .keyboardType(.numberPad)
+                    Text("Balance: $\(card.balance, specifier: "%.2f")")
+                        .foregroundColor(card.balance >= 0 ? .green : .red)
                 }
-                TextField("Last 4 Digits", text: $card.last4Digits)
-                    .keyboardType(.numberPad)
-                Text("Balance: $\(card.balance, specifier: "%.2f")")
-                    .foregroundColor(card.balance >= 0 ? .green : .red)
+
+                Section(header: Text("Actions")) {
+                    Button(action: {
+                        showIncomeSheet = true
+                    }) {
+                        Text("Add Income")
+                            .font(.headline)
+                            .frame(maxWidth: .infinity, alignment: .center)
+                    }
+                    .listRowSeparator(.hidden)
+                    .buttonStyle(BorderedProminentButtonStyle())
+
+                    Button(action: {
+                        showExpenseSheet = true
+                    }) {
+                        Text("Add Expense")
+                            .font(.headline)
+                            .frame(maxWidth: .infinity, alignment: .center)
+                    }
+                    .listRowSeparator(.hidden)
+                    .buttonStyle(BorderedProminentButtonStyle())
+
+                    Button(action: {
+                        showTransferSheet = true
+                    }) {
+                        Text("Transfer")
+                            .font(.headline)
+                            .frame(maxWidth: .infinity, alignment: .center)
+                    }
+                    .listRowSeparator(.hidden)
+                    .buttonStyle(BorderedProminentButtonStyle())
+                }
             }
 
-            Section(header: Text("Actions")) {
-                Button(action: {
-                    showIncomeSheet = true
-                }) {
-                    Text("Add Income")
-                        .font(.headline)
-                        .frame(maxWidth: .infinity, alignment: .center)
-                }
-                .listRowSeparator(.hidden)
-                .buttonStyle(BorderedProminentButtonStyle())
-
-                Button(action: {
-                    showExpenseSheet = true
-                }) {
-                    Text("Add Expense")
-                        .font(.headline)
-                        .frame(maxWidth: .infinity, alignment: .center)
-                }
-                .listRowSeparator(.hidden)
-                .buttonStyle(BorderedProminentButtonStyle())
-
-                Button(action: {
-                    showTransferSheet = true
-                }) {
-                    Text("Transfer")
-                        .font(.headline)
-                        .frame(maxWidth: .infinity, alignment: .center)
-                }
-                .listRowSeparator(.hidden)
-                .buttonStyle(BorderedProminentButtonStyle())
-            }
+            TransactionHistoryView(transactions: card.transactions)
+                .padding(.top)
         }
         .navigationTitle("Edit Card")
         .navigationBarTitleDisplayMode(.inline)
@@ -96,13 +101,30 @@ struct EditCardView: View {
             }
         }
         .sheet(isPresented: $showIncomeSheet) {
-            IncomeSheetView(incomeAmount: $incomeAmount, incomeNote: $incomeNote, card: $card, isPresented: $showIncomeSheet)
+            IncomeSheetView(
+                incomeAmount: $incomeAmount,
+                incomeNote: $incomeNote,
+                card: $card,
+                isPresented: $showIncomeSheet
+            )
         }
         .sheet(isPresented: $showExpenseSheet) {
-            ExpenseSheetView(expenseAmount: $expenseAmount, expenseNote: $expenseNote, card: $card, isPresented: $showExpenseSheet)
+            ExpenseSheetView(
+                expenseAmount: $expenseAmount,
+                expenseNote: $expenseNote,
+                card: $card,
+                isPresented: $showExpenseSheet
+            )
         }
         .sheet(isPresented: $showTransferSheet) {
-            TransferSheetView(card: $card, store: store, transferAmount: $transferAmount, transferNote: $transferNote, selectedTargetCardID: $selectedTargetCardID, isPresented: $showTransferSheet)
+            TransferSheetView(
+                card: $card,
+                store: store,
+                transferAmount: $transferAmount,
+                transferNote: $transferNote,
+                selectedTargetCardID: $selectedTargetCardID,
+                isPresented: $showTransferSheet
+            )
         }
     }
 }
@@ -124,7 +146,15 @@ struct IncomeSheetView: View {
                 Section {
                     Button("Add") {
                         if let amount = Double(incomeAmount) {
+                            let txn = Transaction(
+                                id: UUID(),
+                                date: Date(),
+                                amount: amount,
+                                note: incomeNote,
+                                type: .income
+                            )
                             card.balance += amount
+                            card.transactions.insert(txn, at: 0)
                             incomeAmount = ""
                             incomeNote = ""
                             isPresented = false
@@ -162,7 +192,15 @@ struct ExpenseSheetView: View {
                 Section {
                     Button("Add") {
                         if let amount = Double(expenseAmount) {
+                            let txn = Transaction(
+                                id: UUID(),
+                                date: Date(),
+                                amount: amount,
+                                note: expenseNote,
+                                type: .expense
+                            )
                             card.balance -= amount
+                            card.transactions.insert(txn, at: 0)
                             expenseAmount = ""
                             expenseNote = ""
                             isPresented = false
@@ -238,8 +276,26 @@ struct TransferSheetView: View {
                         if let amount = Double(transferAmount),
                            let targetID = selectedTargetCardID,
                            let index = store.cards.firstIndex(where: { $0.id == targetID }) {
+                            
+                            let outTxn = Transaction(
+                                id: UUID(),
+                                date: Date(),
+                                amount: amount,
+                                note: transferNote,
+                                type: .transferOut
+                            )
                             card.balance -= amount
+                            card.transactions.insert(outTxn, at: 0)
+
+                            let inTxn = Transaction(
+                                id: UUID(),
+                                date: Date(),
+                                amount: amount,
+                                note: transferNote,
+                                type: .transferIn
+                            )
                             store.cards[index].balance += amount
+                            store.cards[index].transactions.insert(inTxn, at: 0)
                             transferAmount = ""
                             transferNote = ""
                             isPresented = false

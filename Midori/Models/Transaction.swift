@@ -6,7 +6,7 @@
 //
 import Foundation
 
-struct Transaction: Identifiable, Codable{
+struct Transaction: Identifiable, Codable {
     let id: UUID
     let date: Date
     let amount: Double
@@ -14,18 +14,18 @@ struct Transaction: Identifiable, Codable{
     let type: TransactionType
 }
 
-enum TransactionType: String, CaseIterable, Codable {
+enum TransactionType: String, Codable {
     case income
     case expense
-    case transferOut
     case transferIn
+    case transferOut
 
     var label: String {
         switch self {
         case .income: return "Income"
         case .expense: return "Expense"
-        case .transferOut: return "Transfer Out"
         case .transferIn: return "Transfer In"
+        case .transferOut: return "Transfer Out"
         }
     }
 }

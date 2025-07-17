@@ -38,12 +38,14 @@ struct Card: Identifiable, Codable {
     var balance: Double
     var last4Digits: String
     var accountType: AccountType
+    var transactions: [Transaction]
     
-    init(institution: String, balance: Double, last4Digits: String, accountType: AccountType) {
+    init(institution: String, balance: Double, last4Digits: String, accountType: AccountType, transactions: [Transaction] = []) {
         self.id = UUID()
         self.institution = institution
         self.balance = balance
         self.last4Digits = last4Digits
         self.accountType = accountType
+        self.transactions = transactions
     }
 }
