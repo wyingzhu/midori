@@ -5,6 +5,11 @@ struct ExpenseSheetView: View {
     @Binding var expenseNote: String
     @Binding var card: Card
     @Binding var isPresented: Bool
+    
+    var isAmountInvalid: Bool {
+        guard let amount = Double(expenseAmount) else { return true }
+        return amount <= 0
+    }
 
     var body: some View {
         NavigationView {
@@ -44,12 +49,12 @@ struct ExpenseSheetView: View {
                     Text("Add Expense")
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(Double(expenseAmount) != nil ? Color.red : Color.gray.opacity(0.3))
+                        .background(Color.accentColor)
                         .foregroundColor(.white)
                         .cornerRadius(10)
                 }
                 .padding(.horizontal)
-                .disabled(Double(expenseAmount) == nil)
+                .disabled(isAmountInvalid)
 
                 Spacer()
             }
@@ -64,4 +69,21 @@ struct ExpenseSheetView: View {
             }
         }
     }
+}
+
+
+#Preview {
+    ExpenseSheetView(
+        expenseAmount: .constant("-1"),
+        expenseNote: .constant("Test Note"),
+        card: .constant(
+            Card(
+                institution: "Demo Bank",
+                balance: 1200.00,
+                last4Digits: "1234",
+                accountType: .debit
+            )
+        ),
+        isPresented: .constant(true)
+    )
 }

@@ -5,6 +5,11 @@ struct IncomeSheetView: View {
     @Binding var incomeNote: String
     @Binding var card: Card
     @Binding var isPresented: Bool
+    
+    var isAmountInvalid: Bool {
+        guard let amount = Double(incomeAmount) else { return true }
+        return amount <= 0
+    }
 
     var body: some View {
         NavigationView {
@@ -44,13 +49,13 @@ struct IncomeSheetView: View {
                     Text("Add Income")
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(Double(incomeAmount) != nil ? Color.accentColor : Color.gray.opacity(0.3))
+                        .background(Color.accentColor)
                         .foregroundColor(.white)
                         .cornerRadius(10)
                 }
                 .padding(.horizontal)
-                .disabled(Double(incomeAmount) == nil)
-
+                .disabled(isAmountInvalid)
+                
                 Spacer()
             }
             .padding()
@@ -64,4 +69,22 @@ struct IncomeSheetView: View {
             }
         }
     }
+}
+
+
+
+#Preview {
+    IncomeSheetView(
+        incomeAmount: .constant("0"),
+        incomeNote: .constant("Test Note"),
+        card: .constant(
+            Card(
+                institution: "Demo Bank",
+                balance: 1200.00,
+                last4Digits: "1234",
+                accountType: .debit
+            )
+        ),
+        isPresented: .constant(true)
+    )
 }
