@@ -21,3 +21,4 @@ struct CardListView_Previews: PreviewProvider {
         CardListView()
     }
 }
+
