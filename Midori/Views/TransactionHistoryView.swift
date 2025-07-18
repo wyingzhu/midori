@@ -4,11 +4,7 @@ struct TransactionHistoryView: View {
     let transactions: [Transaction]
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Recent Transactions")
-                .font(.headline)
-                .padding(.horizontal)
-
+        VStack(alignment: .leading) {
             if transactions.isEmpty {
                 Text("No transactions yet.")
                     .foregroundColor(.secondary)

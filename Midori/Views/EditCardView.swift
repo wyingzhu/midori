@@ -36,26 +36,38 @@ struct EditCardView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 24) {
+                // MARK: Card Balance
+                VStack(alignment: .leading) {
+                    Text("$\(card.balance, specifier: "%.2f")")
+                        .font(.largeTitle)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .bold()
+                    Text("Total balance")
+                        .font(.caption)
+                }
+                .padding()
+                
                 // MARK: Card Info
-                GroupBox(label: Text("Card Info").font(.headline)) {
+                GroupBox(label: Text("Card Info")) {
                     VStack(alignment: .leading, spacing: 12) {
-                        TextField("Institution", text: $card.institution)
-                        Picker("Account Type", selection: $card.accountType) {
-                            ForEach(AccountType.allCases) { type in
-                                Text(type.displayName).tag(type)
+                        HStack {
+                            TextField("Institution", text: $card.institution)
+                                .textFieldStyle(.roundedBorder)
+                            Picker("Account Type", selection: $card.accountType) {
+                                ForEach(AccountType.allCases) { type in
+                                    Text(type.displayName).tag(type)
+                                }
                             }
                         }
                         TextField("Last 4 Digits", text: $card.last4Digits)
                             .keyboardType(.numberPad)
-                        Text("Balance: $\(card.balance, specifier: "%.2f")")
-                            .bold()
-                            .foregroundColor(card.balance >= 0 ? .green : .red)
+                            .textFieldStyle(.roundedBorder)
                     }
                     .padding(.vertical, 4)
                 }
 
                 // MARK: Actions
-                GroupBox(label: Text("Actions").font(.headline)) {
+                GroupBox(label: Text("Actions")) {
                     HStack(spacing: 12) {
                         Button {
                             showIncomeSheet = true
@@ -94,7 +106,7 @@ struct EditCardView: View {
                 }
 
                 // MARK: Transaction History
-                GroupBox {
+                GroupBox(label: Text("Recent Transactions")){
                     TransactionHistoryView(transactions: card.transactions)
                 }
             }
