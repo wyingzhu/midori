@@ -13,6 +13,7 @@ struct TransactionHistoryView: View {
                 Text("No transactions yet.")
                     .foregroundColor(.secondary)
                     .padding(.horizontal)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             } else {
                 ScrollView {
                     VStack(spacing: 12) {
