@@ -29,13 +29,11 @@ struct TransferSheetView: View {
                         VStack(alignment: .leading, spacing: 8) {
                             Text("From: \(card.institution)")
                             Text("Balance: $\(card.balance, specifier: "%.2f")")
-                                .foregroundColor(card.balance >= 0 ? .green : .red)
-
+                            
                             if let target = store.cards.first(where: { $0.id == selectedTargetCardID }) {
                                 Divider().padding(.vertical, 4)
                                 Text("To: \(target.institution)")
                                 Text("Balance: $\(target.balance, specifier: "%.2f")")
-                                    .foregroundColor(target.balance >= 0 ? .green : .red)
                             }
                         }
                         .padding(.horizontal)
