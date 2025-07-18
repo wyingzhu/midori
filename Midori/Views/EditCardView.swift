@@ -34,56 +34,71 @@ struct EditCardView: View {
     }
 
     var body: some View {
-        VStack {
-            Form {
-                Section(header: Text("Card Info")) {
-                    TextField("Institution", text: $card.institution)
-                    Picker("Account Type", selection: $card.accountType) {
-                        ForEach(AccountType.allCases) { type in
-                            Text(type.displayName).tag(type)
+        ScrollView {
+            VStack(spacing: 24) {
+                // MARK: Card Info
+                GroupBox(label: Text("Card Info").font(.headline)) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        TextField("Institution", text: $card.institution)
+                        Picker("Account Type", selection: $card.accountType) {
+                            ForEach(AccountType.allCases) { type in
+                                Text(type.displayName).tag(type)
+                            }
                         }
+                        TextField("Last 4 Digits", text: $card.last4Digits)
+                            .keyboardType(.numberPad)
+                        Text("Balance: $\(card.balance, specifier: "%.2f")")
+                            .bold()
+                            .foregroundColor(card.balance >= 0 ? .green : .red)
                     }
-                    TextField("Last 4 Digits", text: $card.last4Digits)
-                        .keyboardType(.numberPad)
-                    Text("Balance: $\(card.balance, specifier: "%.2f")")
-                        .foregroundColor(card.balance >= 0 ? .green : .red)
+                    .padding(.vertical, 4)
                 }
 
-                Section(header: Text("Actions")) {
-                    Button(action: {
-                        showIncomeSheet = true
-                    }) {
-                        Text("Add Income")
-                            .font(.headline)
-                            .frame(maxWidth: .infinity, alignment: .center)
+                // MARK: Actions
+                GroupBox(label: Text("Actions").font(.headline)) {
+                    HStack(spacing: 12) {
+                        Button {
+                            showIncomeSheet = true
+                        } label: {
+                            VStack {
+                                Image(systemName: "plus.rectangle.on.rectangle")
+                                Text("Deposit")
+                            }
+                        }
+                        .padding(.horizontal, 12)
+                        
+                        Divider()
+                        
+                        Button {
+                            showExpenseSheet = true
+                        } label: {
+                            VStack {
+                                Image(systemName: "creditcard.fill")
+                                Text("Spend")
+                            }
+                        }
+                        .padding(.horizontal, 12)
+                        
+                        Divider()
+                        
+                        Button {
+                            showTransferSheet = true
+                        } label: {
+                            VStack {
+                                Image(systemName: "arrow.left.arrow.right")
+                                Text("Transfer")
+                            }
+                        }
+                        .padding(.horizontal, 12)
                     }
-                    .listRowSeparator(.hidden)
-                    .buttonStyle(BorderedProminentButtonStyle())
+                }
 
-                    Button(action: {
-                        showExpenseSheet = true
-                    }) {
-                        Text("Add Expense")
-                            .font(.headline)
-                            .frame(maxWidth: .infinity, alignment: .center)
-                    }
-                    .listRowSeparator(.hidden)
-                    .buttonStyle(BorderedProminentButtonStyle())
-
-                    Button(action: {
-                        showTransferSheet = true
-                    }) {
-                        Text("Transfer")
-                            .font(.headline)
-                            .frame(maxWidth: .infinity, alignment: .center)
-                    }
-                    .listRowSeparator(.hidden)
-                    .buttonStyle(BorderedProminentButtonStyle())
+                // MARK: Transaction History
+                GroupBox {
+                    TransactionHistoryView(transactions: card.transactions)
                 }
             }
-
-            TransactionHistoryView(transactions: card.transactions)
-                .padding(.top)
+            .padding()
         }
         .navigationTitle("Edit Card")
         .navigationBarTitleDisplayMode(.inline)
