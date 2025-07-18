@@ -13,6 +13,20 @@ struct CardListView: View {
     @State private var showDeleteAlert = false
     @State private var deleteIndexSet: IndexSet?
     @State private var selectedCard: Card?
+    @State private var selectedAccountType: AccountType? = nil
+    
+    var filteredCards: [Card] {
+        if let type = selectedAccountType {
+            return store.cards.filter { $0.accountType == type }
+        } else {
+            return store.cards
+        }
+    }
+    
+    var availableAccountTypes: [AccountType] {
+        let types = store.cards.map { $0.accountType }
+        return Array(Set(types)).sorted { $0.displayName < $1.displayName }
+    }
 
     var body: some View {
         NavigationView {
@@ -23,13 +37,13 @@ struct CardListView: View {
                         .padding()
                 } else {
                     List {
-                        ForEach(store.cards) { card in
+                        ForEach(filteredCards) { card in
                             CardView(card: card)
-                                .listRowInsets(EdgeInsets())       // 移除默认 padding
+                                .listRowInsets(EdgeInsets())
                                 .listRowSeparator(.hidden)
-                                .padding(.vertical, 8)             // 上下留白
-                                .padding(.horizontal, 16)          // 左右留白
-                                .background(Color.clear)           // 透明背景
+                                .padding(.vertical, 8)
+                                .padding(.horizontal, 16)
+                                .background(Color.clear)
                                 .onTapGesture {
                                     selectedCard = card
                                 }
@@ -39,7 +53,7 @@ struct CardListView: View {
                             self.showDeleteAlert = true
                         }
                     }
-                    .listStyle(PlainListStyle())                   // 纯净列表风格
+                    .listStyle(PlainListStyle())
                     .alert("Delete Card", isPresented: $showDeleteAlert, actions: {
                         Button("Delete", role: .destructive) {
                             if let indexSet = deleteIndexSet {
@@ -60,10 +74,21 @@ struct CardListView: View {
                 }
             }
             .toolbar {
+                Menu {
+                    Picker(selection: $selectedAccountType, label: EmptyView()) {
+                        Text("All").tag(AccountType?.none)
+                        ForEach(availableAccountTypes, id: \.self) { type in
+                            Text(type.displayName).tag(Optional(type))
+                        }
+                    }
+                } label: {
+                    Label("Filter", systemImage: "line.3.horizontal.decrease.circle")
+                }
+                
                 Button {
                     showingAddCard = true
                 } label: {
-                    Label("Add account", systemImage: "plus")
+                    Label("Add Card", systemImage: "plus")
                 }
             }
             .sheet(isPresented: $showingAddCard) {
