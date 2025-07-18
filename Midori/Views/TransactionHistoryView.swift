@@ -27,23 +27,14 @@ struct TransactionHistoryView: View {
                                 }
                                 Spacer()
                                 VStack(alignment: .trailing, spacing: 4) {
-                                    Text("\(txn.amount, specifier: "%.2f")")
-                                        .foregroundColor({
-                                            switch txn.type {
-                                            case .income:
-                                                return .green
-                                            case .expense:
-                                                return .red
-                                            case .transferIn, .transferOut:
-                                                return .primary
-                                            }
-                                        }())
+                                    Text("$\(txn.amount, specifier: "%.2f")")
                                     Text(txn.date, style: .date)
                                         .font(.caption)
                                         .foregroundColor(.secondary)
                                 }
                             }
                             .padding(.horizontal)
+                            Divider()
                         }
                     }
                 }
