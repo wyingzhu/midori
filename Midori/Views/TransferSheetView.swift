@@ -1,10 +1,3 @@
-//
-//  TransferSheetView.swift
-//  Midori
-//
-//  Created by Wanying Zhu on 7/18/25.
-//
-
 import SwiftUI
 
 struct TransferSheetView: View {
@@ -28,41 +21,60 @@ struct TransferSheetView: View {
 
     var body: some View {
         NavigationView {
-            Form {
-                Section(header: Text("Accounts")) {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("From: \(card.institution)")
-                        Text("Balance: $\(card.balance, specifier: "%.2f")")
-                            .foregroundColor(card.balance >= 0 ? .green : .red)
-                    }
-                    if let target = store.cards.first(where: { $0.id == selectedTargetCardID }) {
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text("To: \(target.institution)")
-                            Text("Balance: $\(target.balance, specifier: "%.2f")")
-                                .foregroundColor(target.balance >= 0 ? .green : .red)
-                        }
-                    }
-                }
+            ScrollView {
+                VStack(spacing: 20) {
+                    // MARK: - Account Summary
+                    GroupBox(label: Label("Accounts", systemImage: "arrow.left.arrow.right")
+                                .font(.headline)) {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("From: \(card.institution)")
+                            Text("Balance: $\(card.balance, specifier: "%.2f")")
+                                .foregroundColor(card.balance >= 0 ? .green : .red)
 
-                Section(header: Text("Transfer To")) {
-                    Picker("Target Card", selection: $selectedTargetCardID) {
-                        ForEach(targetCards) { targetCard in
-                            Text(targetCard.institution)
-                                .tag(targetCard.id as UUID?)
+                            if let target = store.cards.first(where: { $0.id == selectedTargetCardID }) {
+                                Divider().padding(.vertical, 4)
+                                Text("To: \(target.institution)")
+                                Text("Balance: $\(target.balance, specifier: "%.2f")")
+                                    .foregroundColor(target.balance >= 0 ? .green : .red)
+                            }
                         }
+                        .padding(.horizontal)
+                        .padding(.vertical, 6)
                     }
-                }
-                Section(header: Text("Transfer Details")) {
-                    TextField("Amount", text: $transferAmount)
-                        .keyboardType(.decimalPad)
-                    TextField("Note (optional)", text: $transferNote)
-                }
-                Section {
-                    Button("Transfer") {
+
+                    // MARK: - Select Target
+                    GroupBox(label: Label("Transfer To", systemImage: "arrowshape.turn.up.right")
+                                .font(.headline)) {
+                        Picker("Target Card", selection: $selectedTargetCardID) {
+                            ForEach(targetCards) { card in
+                                Text(card.institution).tag(card.id as UUID?)
+                            }
+                        }
+                        .pickerStyle(.menu)
+                        .padding(.horizontal)
+                    }
+
+                    // MARK: - Transfer Details
+                    GroupBox(label: Label("Transfer Details", systemImage: "pencil")
+                                .font(.headline)) {
+                        VStack(spacing: 12) {
+                            TextField("Amount", text: $transferAmount)
+                                .keyboardType(.decimalPad)
+                                .textFieldStyle(.roundedBorder)
+
+                            TextField("Note (optional)", text: $transferNote)
+                                .textFieldStyle(.roundedBorder)
+                        }
+                        .padding(.horizontal)
+                        .padding(.vertical, 8)
+                    }
+
+                    // MARK: - Transfer Button
+                    Button(action: {
                         if let amount = Double(transferAmount),
                            let targetID = selectedTargetCardID,
                            let index = store.cards.firstIndex(where: { $0.id == targetID }) {
-                            
+
                             let outTxn = Transaction(
                                 id: UUID(),
                                 date: Date(),
@@ -82,13 +94,25 @@ struct TransferSheetView: View {
                             )
                             store.cards[index].balance += amount
                             store.cards[index].transactions.insert(inTxn, at: 0)
+
                             transferAmount = ""
                             transferNote = ""
                             isPresented = false
                         }
+                    }) {
+                        Text("Transfer")
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(isTransferAmountValid && selectedTargetCardID != nil ? Color.accentColor : Color.gray.opacity(0.3))
+                            .foregroundColor(.white)
+                            .cornerRadius(10)
                     }
+                    .padding(.horizontal)
                     .disabled(!isTransferAmountValid || selectedTargetCardID == nil)
+
+                    Spacer(minLength: 20)
                 }
+                .padding()
             }
             .navigationTitle("Transfer Funds")
             .toolbar {
@@ -100,4 +124,39 @@ struct TransferSheetView: View {
             }
         }
     }
+}
+
+#Preview {
+    let sampleCard = Card(
+        institution: "Chase",
+        balance: 1200.0,
+        last4Digits: "1234",
+        accountType: .debit
+    )
+
+    let targetCard = Card(
+        institution: "Bank of America",
+        balance: 800.0,
+        last4Digits: "5678",
+        accountType: .debit
+    )
+    
+    let thirdCard = Card(
+        institution: "Capital One",
+        balance: 500.0,
+        last4Digits: "9012",
+        accountType: .debit
+    )
+
+    let store = CardStore()
+    store.cards = [sampleCard, targetCard, thirdCard]
+
+    return TransferSheetView(
+        card: .constant(store.cards[0]),
+        store: store,
+        transferAmount: .constant("100"),
+        transferNote: .constant("Rent"),
+        selectedTargetCardID: .constant(store.cards[1].id),
+        isPresented: .constant(true)
+    )
 }
