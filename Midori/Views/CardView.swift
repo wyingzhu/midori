@@ -25,7 +25,6 @@ struct CardView: View {
             }
             Text("$\(card.balance, specifier: "%.2f")")
                 .font(.headline)
-                .foregroundColor(card.balance >= 0 ? .green : .red)
         }
         .padding()
         .background(

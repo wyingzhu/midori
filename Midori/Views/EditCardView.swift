@@ -74,7 +74,7 @@ struct EditCardView: View {
                         } label: {
                             VStack {
                                 Image(systemName: "plus.rectangle.on.rectangle")
-                                Text("Deposit")
+                                Text("Income")
                             }
                         }
                         .padding(.horizontal, 12)
@@ -86,7 +86,7 @@ struct EditCardView: View {
                         } label: {
                             VStack {
                                 Image(systemName: "creditcard.fill")
-                                Text("Spend")
+                                Text("Expense")
                             }
                         }
                         .padding(.horizontal, 12)
@@ -152,193 +152,6 @@ struct EditCardView: View {
                 selectedTargetCardID: $selectedTargetCardID,
                 isPresented: $showTransferSheet
             )
-        }
-    }
-}
-
-struct IncomeSheetView: View {
-    @Binding var incomeAmount: String
-    @Binding var incomeNote: String
-    @Binding var card: Card
-    @Binding var isPresented: Bool
-
-    var body: some View {
-        NavigationView {
-            Form {
-                Section(header: Text("Add Income")) {
-                    TextField("Amount", text: $incomeAmount)
-                        .keyboardType(.decimalPad)
-                    TextField("Note (optional)", text: $incomeNote)
-                }
-                Section {
-                    Button("Add") {
-                        if let amount = Double(incomeAmount) {
-                            let txn = Transaction(
-                                id: UUID(),
-                                date: Date(),
-                                amount: amount,
-                                note: incomeNote,
-                                type: .income
-                            )
-                            card.balance += amount
-                            card.transactions.insert(txn, at: 0)
-                            incomeAmount = ""
-                            incomeNote = ""
-                            isPresented = false
-                        }
-                    }
-                    .disabled(Double(incomeAmount) == nil)
-                }
-            }
-            .navigationTitle("New Income")
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        isPresented = false
-                    }
-                }
-            }
-        }
-    }
-}
-
-struct ExpenseSheetView: View {
-    @Binding var expenseAmount: String
-    @Binding var expenseNote: String
-    @Binding var card: Card
-    @Binding var isPresented: Bool
-
-    var body: some View {
-        NavigationView {
-            Form {
-                Section(header: Text("Add Expense")) {
-                    TextField("Amount", text: $expenseAmount)
-                        .keyboardType(.decimalPad)
-                    TextField("Note (optional)", text: $expenseNote)
-                }
-                Section {
-                    Button("Add") {
-                        if let amount = Double(expenseAmount) {
-                            let txn = Transaction(
-                                id: UUID(),
-                                date: Date(),
-                                amount: amount,
-                                note: expenseNote,
-                                type: .expense
-                            )
-                            card.balance -= amount
-                            card.transactions.insert(txn, at: 0)
-                            expenseAmount = ""
-                            expenseNote = ""
-                            isPresented = false
-                        }
-                    }
-                    .disabled(Double(expenseAmount) == nil)
-                }
-            }
-            .navigationTitle("New Expense")
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        isPresented = false
-                    }
-                }
-            }
-        }
-    }
-}
-
-struct TransferSheetView: View {
-    @Binding var card: Card
-    var store: CardStore
-    @Binding var transferAmount: String
-    @Binding var transferNote: String
-    @Binding var selectedTargetCardID: UUID?
-    @Binding var isPresented: Bool
-
-    var targetCards: [Card] {
-        store.cards.filter { $0.id != card.id }
-    }
-
-    var isTransferAmountValid: Bool {
-        if let amount = Double(transferAmount) {
-            return amount > 0 && amount <= card.balance
-        }
-        return false
-    }
-
-    var body: some View {
-        NavigationView {
-            Form {
-                Section(header: Text("Accounts")) {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("From: \(card.institution)")
-                        Text("Balance: $\(card.balance, specifier: "%.2f")")
-                            .foregroundColor(card.balance >= 0 ? .green : .red)
-                    }
-                    if let target = store.cards.first(where: { $0.id == selectedTargetCardID }) {
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text("To: \(target.institution)")
-                            Text("Balance: $\(target.balance, specifier: "%.2f")")
-                                .foregroundColor(target.balance >= 0 ? .green : .red)
-                        }
-                    }
-                }
-
-                Section(header: Text("Transfer To")) {
-                    Picker("Target Card", selection: $selectedTargetCardID) {
-                        ForEach(targetCards) { targetCard in
-                            Text(targetCard.institution)
-                                .tag(targetCard.id as UUID?)
-                        }
-                    }
-                }
-                Section(header: Text("Transfer Details")) {
-                    TextField("Amount", text: $transferAmount)
-                        .keyboardType(.decimalPad)
-                    TextField("Note (optional)", text: $transferNote)
-                }
-                Section {
-                    Button("Transfer") {
-                        if let amount = Double(transferAmount),
-                           let targetID = selectedTargetCardID,
-                           let index = store.cards.firstIndex(where: { $0.id == targetID }) {
-                            
-                            let outTxn = Transaction(
-                                id: UUID(),
-                                date: Date(),
-                                amount: amount,
-                                note: transferNote,
-                                type: .transferOut
-                            )
-                            card.balance -= amount
-                            card.transactions.insert(outTxn, at: 0)
-
-                            let inTxn = Transaction(
-                                id: UUID(),
-                                date: Date(),
-                                amount: amount,
-                                note: transferNote,
-                                type: .transferIn
-                            )
-                            store.cards[index].balance += amount
-                            store.cards[index].transactions.insert(inTxn, at: 0)
-                            transferAmount = ""
-                            transferNote = ""
-                            isPresented = false
-                        }
-                    }
-                    .disabled(!isTransferAmountValid || selectedTargetCardID == nil)
-                }
-            }
-            .navigationTitle("Transfer Funds")
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        isPresented = false
-                    }
-                }
-            }
         }
     }
 }
