@@ -74,26 +74,39 @@ struct CardListView: View {
                 }
             }
             .toolbar {
-                Menu {
-                    Picker(selection: $selectedAccountType, label: EmptyView()) {
-                        Text("All").tag(AccountType?.none)
-                        ForEach(availableAccountTypes, id: \.self) { type in
-                            Text(type.displayName).tag(Optional(type))
+                HStack{
+                    Menu(){
+                        Picker(selection: $selectedAccountType, label: EmptyView()) {
+                            Text("All").tag(AccountType?.none)
+                            ForEach(availableAccountTypes, id: \.self) { type in
+                                Text(type.displayName).tag(Optional(type))
+                            }
                         }
+                    } label: {
+                        Label("Filter", systemImage: "line.3.horizontal.decrease.circle")
                     }
-                } label: {
-                    Label("Filter", systemImage: "line.3.horizontal.decrease.circle")
+                    
+                    Button {
+                        showingAddCard = true
+                    } label: {
+                        Label("Add Card", systemImage: "plus.app")
+                    }
                 }
-                
-                Button {
-                    showingAddCard = true
-                } label: {
-                    Label("Add Card", systemImage: "plus")
-                }
+                .padding(.trailing, 8)
             }
             .sheet(isPresented: $showingAddCard) {
                 AddCardView(store: store)
             }
         }
     }
+}
+
+#Preview {
+    let store = CardStore()
+    store.cards = [
+        Card(institution: "Chase", balance: 1500.0, last4Digits: "1234", accountType: .debit),
+        Card(institution: "Amex", balance: 2200.0, last4Digits: "5678", accountType: .credit)
+    ]
+    return CardListView()
+        .environmentObject(store)
 }
